@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  password      String
+  role          UserRole @default(VENDOR_ADMIN)
+  vendorId      String
+  vendor        Vendor   @relation(fields: [vendorId], references: [id])
+  createdAt     DateTime @default(now())
+  auditLogs     AuditLog[]
+}
+
+model Vendor {
+  id                String             @id @default(cuid())
+  companyName       String
+  factoryLocation   String // e.g., "Tamil Nadu"
+  complianceStatus  ComplianceStatus   @default(RED)
+  users             User[]
+  uploadedDocuments UploadedDocument[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  overallComplianceScore Float?
+}
+
+model ComplianceDocument {
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  pillar              CompliancePillar
+  description         String
+  issuingAuthority    String
+  uploadedDocuments   UploadedDocument[]
+  // New fields for verification rules
+  verificationRules   Json?    // Store document-specific validation rules
+  requiredKeywords    String[] // Keywords that must be present
+  optionalKeywords    String[] // Supporting keywords
+  validationRegex     String?  // Regex pattern for document number
+}
+
+model UploadedDocument {
+  id                   String             @id @default(cuid())
+  vendorId             String
+  vendor               Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  complianceDocumentId String
+  complianceDocument   ComplianceDocument @relation(fields: [complianceDocumentId], references: [id])
+  filePath             String // Local file path relative to server
+  originalFilename     String
+  verificationStatus   VerificationStatus @default(PENDING)
+  uploadedAt           DateTime           @default(now())
+  history              AuditLog[]
+  // New fields for verification details
+  verificationSummary  String?           // Human-readable summary of checks
+  extractedData        Json?             // Key-value pairs from the document
+  verificationDetails  Json?             // Detailed verification results
+  lastVerifiedAt       DateTime?         // When the document was last verified
+  expiryDate           DateTime?         // Document's expiry date if applicable
+  apiVerificationId    String?          // ID from external verification API
+  riskScore            Float?
+}
+
+model AuditLog {
+  id              String             @id @default(cuid())
+  documentId      String
+  document        UploadedDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  changedByUserId String
+  changedByUser   User               @relation(fields: [changedByUserId], references: [id])
+  timestamp       DateTime           @default(now())
+  action          String             // e.g., "STATUS_CHANGE", "UPLOAD"
+  details         String?
+  // New fields for status tracking
+  previousStatus  VerificationStatus?
+  newStatus      VerificationStatus?
+  verificationMethod String?         // e.g., "LOCAL", "API", "MANUAL"
+  apiResponse    Json?              // Store API verification responses
+}
+
+enum UserRole { 
+  VENDOR_ADMIN
+  BUYER_ADMIN
+  SYSTEM_ADMIN 
+}
+
+enum ComplianceStatus { 
+  GREEN
+  AMBER
+  RED 
+}
+
+enum VerificationStatus { 
+  PENDING
+  PENDING_API_VALIDATION  // Passed local checks, waiting for API
+  PENDING_MANUAL_REVIEW   // Needs human review
+  VERIFIED               // Fully verified
+  REJECTED              // Failed verification
+  EXPIRED              // Was valid but expired
+  MISSING             // Required but not uploaded
+}
+
+enum CompliancePillar {
+  FACTORY_REGISTRATION_SAFETY
+  WAGES_OVERTIME
+  ESI_PF_COVERAGE
+  CHILD_LABOR_AGE_VERIFICATION
+  ENVIRONMENTAL
+}
