@@ -22,4 +22,31 @@ const PrivateRoute = ({ children }) => {
   }
 };
 
-export default PrivateRoute; 
+const VendorRoute = ({ children }) => {
+  console.log("VendorRoute: Rendering");
+  
+  try {
+    const { token, user } = useAuth();
+    console.log("VendorRoute: Token exists:", !!token);
+    console.log("VendorRoute: User role:", user?.role);
+    
+    if (!token) {
+      console.log("VendorRoute: No token, redirecting to login");
+      return <Navigate to="/login" replace />;
+    }
+    
+    if (user?.role !== 'VENDOR_ADMIN') {
+      console.log("VendorRoute: User is not a vendor, redirecting to dashboard");
+      return <Navigate to="/dashboard" replace />;
+    }
+    
+    console.log("VendorRoute: User is a vendor, rendering children");
+    return children;
+  } catch (error) {
+    console.error("VendorRoute: AuthProvider not available:", error);
+    return <Navigate to="/login" replace />;
+  }
+};
+
+export default PrivateRoute;
+export { VendorRoute }; 

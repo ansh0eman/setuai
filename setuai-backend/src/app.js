@@ -6,6 +6,10 @@ import authRoutes from './api/auth/auth.routes.js';
 import vendorRoutes from './api/vendor/vendor.routes.js';
 import complianceRoutes from './api/compliance/compliance.routes.js';
 import documentRoutes from './api/document/document.routes.js';
+import profileRoutes from './api/profile/profile.routes.js';
+import marketplaceRoutes from './api/marketplace/marketplace.routes.js';
+import engagementRoutes from './api/engagement/engagement.routes.js';
+import invoiceRoutes from './api/invoice/invoice.routes.js';
 
 const app = express();
 
@@ -26,6 +30,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/document', documentRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/engagement', engagementRoutes);
+app.use('/api/invoice', invoiceRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

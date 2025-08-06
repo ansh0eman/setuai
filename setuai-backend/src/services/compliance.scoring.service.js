@@ -44,14 +44,15 @@ export const calculateDocumentScore = async (documentId) => {
   if (document.verificationStatus === 'VERIFIED') {
     // Use the AI confidence score from verificationDetails if available
     const verificationDetails = document.verificationDetails || {};
-    const confidenceScore = verificationDetails.confidenceScore || 0;
-    baseScore = confidenceScore * 100; // Convert confidence score to percentage
+    const confidenceScore = verificationDetails.confidenceScore || 1.0; // Default to 1.0 if no confidence score
+    // Apply confidence score as a multiplier to the base verified score
+    baseScore = scoringWeights.factors.VERIFIED * confidenceScore;
   } else {
     baseScore = scoringWeights.factors[document.verificationStatus] || 0;
   }
 
   const historyMultiplier = await _calculateHistoryMultiplier(documentId);
-  const finalScore = baseScore * historyMultiplier;
+  const finalScore = Math.min(baseScore * historyMultiplier, 100); // Cap at 100%
 
   await prisma.uploadedDocument.update({
     where: { id: documentId },
@@ -82,6 +83,7 @@ export const calculateVendorScore = async (vendorId) => {
 
   let totalWeightedScore = 0;
   let totalPillarWeight = 0;
+  let validDocumentsCount = 0;
 
   for (const reqDoc of allRequiredDocs) {
     const pillarWeight = scoringWeights.pillars[reqDoc.pillar] || 1.0;
@@ -98,6 +100,7 @@ export const calculateVendorScore = async (vendorId) => {
       } else {
         score = uploadedDoc.riskScore;
       }
+      validDocumentsCount++;
     } else {
       // Document is missing
       score = scoringWeights.factors.MISSING;
@@ -107,8 +110,14 @@ export const calculateVendorScore = async (vendorId) => {
     totalPillarWeight += pillarWeight;
   }
 
-  const finalVendorScore = totalPillarWeight > 0 ? 
-    (totalWeightedScore / totalPillarWeight) * (vendorUploadedDocs.length / allRequiredDocs.length) : 0;
+  // Calculate coverage percentage (how many documents are uploaded vs required)
+  const coveragePercentage = allRequiredDocs.length > 0 ? (validDocumentsCount / allRequiredDocs.length) : 0;
+  
+  // Calculate weighted average score
+  const weightedAverageScore = totalPillarWeight > 0 ? (totalWeightedScore / totalPillarWeight) : 0;
+  
+  // Final score is the weighted average score, capped at 100%
+  const finalVendorScore = Math.min(weightedAverageScore, 100);
   
   let status;
   if (finalVendorScore >= 85) {

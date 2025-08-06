@@ -116,7 +116,10 @@ const ComplianceRadialChart = ({ documents, overallScore }) => {
       formatter: function (val, opts) {
         return labels[opts.seriesIndex] + " - " + opts.w.globals.series[opts.seriesIndex] + '%'
       },
-      position: 'bottom'
+      position: 'bottom',
+      labels: {
+        colors: '#374151'
+      }
     },
     labels: labels,
     responsive: [{
@@ -132,37 +135,37 @@ const ComplianceRadialChart = ({ documents, overallScore }) => {
   return (
     <div className="flex flex-col lg:flex-row gap-8">
       <div className="w-full lg:w-1/3">
-        <div className="bg-white p-6 rounded-xl border border-gray-200 h-full flex flex-col">
-          <h5 className="text-xl font-bold text-gray-900">Compliance Breakdown</h5>
-          <p className="text-sm text-gray-600 mt-1">Pillar-wise compliance score</p>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 h-full flex flex-col">
+          <h5 className="text-xl font-bold text-gray-900 dark:text-white">Compliance Breakdown</h5>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Pillar-wise compliance score</p>
           <div className="flex-grow flex flex-col justify-center items-center mt-4">
             <Chart options={chartOptions} series={series} type="donut" width="100%" />
           </div>
         </div>
       </div>
       <div className="w-full lg:w-2/3">
-        <div className="bg-white p-6 rounded-xl border border-gray-200 h-full">
-        <h5 className="text-xl font-bold text-gray-900">Smart Compliance Insights</h5>
-          <p className="text-sm text-gray-600 mt-1">Actionable recommendations to improve your status</p>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 h-full">
+        <h5 className="text-xl font-bold text-gray-900 dark:text-white">Smart Compliance Insights</h5>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Actionable recommendations to improve your status</p>
           <div className="space-y-3 mt-4 max-h-[380px] overflow-y-auto scrollbar-hide">
             {suggestions.length > 0 ? (
               suggestions.map((suggestion, index) => (
                 <div key={index} className={`p-3 rounded-lg border ${
-                  suggestion.type === 'error' ? 'border-red-200 bg-red-50/50' :
-                  suggestion.type === 'warning' ? 'border-yellow-200 bg-yellow-50/50' :
-                  'border-green-200 bg-green-50/50'
+                  suggestion.type === 'error' ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20' :
+                  suggestion.type === 'warning' ? 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20' :
+                  'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
                 }`}>
                   <div className="flex items-start">
                     <div className="ml-2">
                       <h3 className={`text-sm font-medium ${
-                        suggestion.type === 'error' ? 'text-red-700' :
-                        suggestion.type === 'warning' ? 'text-yellow-700' :
-                        'text-green-700'
+                        suggestion.type === 'error' ? 'text-red-700 dark:text-red-400' :
+                        suggestion.type === 'warning' ? 'text-yellow-700 dark:text-yellow-400' :
+                        'text-green-700 dark:text-green-400'
                       }`}>{suggestion.message}</h3>
                       <p className={`mt-1 text-xs ${
-                        suggestion.type === 'error' ? 'text-red-600' :
-                        suggestion.type === 'warning' ? 'text-yellow-600' :
-                        'text-green-600'
+                        suggestion.type === 'error' ? 'text-red-600 dark:text-red-300' :
+                        suggestion.type === 'warning' ? 'text-yellow-600 dark:text-yellow-300' :
+                        'text-green-600 dark:text-green-300'
                       }`}>{suggestion.action}</p>
                     </div>
                   </div>
@@ -170,7 +173,7 @@ const ComplianceRadialChart = ({ documents, overallScore }) => {
               ))
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500">No specific recommendations at this time.</p>
+                <p className="text-gray-500 dark:text-gray-400">No specific recommendations at this time.</p>
               </div>
             )}
           </div>

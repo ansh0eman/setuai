@@ -3,6 +3,62 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Ensure input elements are properly interactive */
+input, textarea, select {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+
+/* Ensure password inputs work properly */
+input[type="password"] {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  position: relative !important;
+  z-index: auto !important;
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Ensure form elements are not blocked */
+form {
+  pointer-events: auto !important;
+}
+
+/* Ensure the login form specifically works */
+form[class*="space-y-6"] {
+  pointer-events: auto !important;
+}
+
+form[class*="space-y-6"] input {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  cursor: text !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+
 /* Ensure navbar displays properly */
 .navbar {
   position: relative;
@@ -355,18 +411,6 @@ div[class*="navigation-sidebar"] {
   100% {
     transform: rotate(var(--angle)) translateX(-500px);
     opacity: 0;}}
-  @keyframes shimmer-slide {
-  to {
-    transform: translate(calc(100cqw - 100%), 0);}}
-  @keyframes spin-around {
-  0% {
-    transform: translateZ(0) rotate(0);}
-  15%, 35% {
-    transform: translateZ(0) rotate(90deg);}
-  65%, 85% {
-    transform: translateZ(0) rotate(270deg);}
-  100% {
-    transform: translateZ(0) rotate(360deg);}}
   @keyframes shimmer-slide {
   to {
     transform: translate(calc(100cqw - 100%), 0);}}

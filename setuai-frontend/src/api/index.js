@@ -15,6 +15,7 @@ api.interceptors.request.use(config => {
   console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`);
   console.log('Request headers:', config.headers);
   console.log('Authorization header:', config.headers.Authorization);
+  console.log('Request data:', config.data);
   console.log('Full request config:', config);
   return config;
 });
@@ -90,6 +91,119 @@ export const uploadDocument = (formData) => {
 export const getVendorReport = () => {
   console.log('API: Fetching vendor report');
   return api.get("/vendor/report");
+};
+
+// Vendor buyer requests
+export const getBuyerRequests = () => {
+  console.log('API: Fetching buyer requests');
+  return api.get("/vendor/buyer-requests");
+};
+
+export const respondToBuyerRequest = (engagementId, data) => {
+  console.log('API: Responding to buyer request');
+  return api.put(`/vendor/buyer-requests/${engagementId}/respond`, data);
+};
+
+export const getVendorEngagements = () => {
+  console.log('🔵 [API_DEBUG] Getting vendor engagements');
+  return api.get('/vendor/engagements');
+};
+
+export const getVendorEngagementDetails = (engagementId) => {
+  console.log('🔵 [API_DEBUG] Getting vendor engagement details:', engagementId);
+  return api.get(`/vendor/engagements/${engagementId}`);
+};
+
+// Marketplace API endpoints
+export const getMarketplaceVendors = (params) => {
+  console.log('API: Fetching marketplace vendors');
+  return api.get("/marketplace/vendors", { params });
+};
+
+export const getMarketplaceVendor = (vendorId) => {
+  console.log('API: Fetching marketplace vendor details');
+  return api.get(`/marketplace/vendors/${vendorId}`);
+};
+
+// Profile management API endpoints
+export const getProfile = () => {
+  console.log('API: Fetching vendor profile');
+  return api.get("/profile");
+};
+
+export const updateProfile = (profileData) => {
+  console.log('API: Updating vendor profile');
+  return api.put("/profile", profileData);
+};
+
+export const togglePublish = () => {
+  console.log('API: Toggling vendor publish status');
+  return api.post("/profile/publish");
+};
+
+// Buyer Engagements API endpoints
+export const getBuyerEngagements = () => {
+  console.log('API: Fetching buyer engagements');
+  return api.get("/engagement");
+};
+
+export const createEngagement = (engagementData) => {
+  console.log('🔵 [API_DEBUG] Creating new engagement');
+  console.log('🔵 [API_DEBUG] Engagement data:', engagementData);
+  return api.post("/engagement", engagementData);
+};
+
+export const updateEngagement = (engagementId, engagementData) => {
+  console.log('🔵 [API_DEBUG] Updating engagement');
+  return api.put(`/engagement/${engagementId}`, engagementData);
+};
+
+export const completeEngagement = (engagementId, completionNotes) => {
+  console.log('🔵 [API_DEBUG] Completing engagement');
+  return api.put(`/engagement/${engagementId}/complete`, { completionNotes });
+};
+
+export const getEngagementDetails = (engagementId) => {
+  console.log('API: Fetching engagement details');
+  return api.get(`/engagement/${engagementId}`);
+};
+
+export const deleteEngagement = (engagementId) => {
+  console.log('API: Deleting engagement');
+  return api.delete(`/engagement/${engagementId}`);
+};
+
+// Invoice API endpoints
+export const uploadInvoice = (engagementId, formData) => {
+  console.log('🔵 [API_DEBUG] Uploading invoice for engagement:', engagementId);
+  return api.post(`/invoice/engagements/${engagementId}/upload`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const getInvoiceDetails = (invoiceId) => {
+  console.log('🔵 [API_DEBUG] Getting invoice details:', invoiceId);
+  return api.get(`/invoice/${invoiceId}`);
+};
+
+export const getEngagementInvoices = (engagementId) => {
+  console.log('🔵 [API_DEBUG] Getting invoices for engagement:', engagementId);
+  return api.get(`/invoice/engagements/${engagementId}`);
+};
+
+export const rateInvoice = (invoiceId, ratingData) => {
+  console.log('🔵 [API_DEBUG] Rating invoice:', invoiceId);
+  return api.post(`/invoice/${invoiceId}/rate`, ratingData);
+};
+
+export const getInvoiceStats = () => {
+  console.log('🔵 [API_DEBUG] Getting invoice statistics');
+  return api.get('/invoice/stats/vendor');
+};
+
+export const deleteInvoice = (invoiceId) => {
+  console.log('🔵 [API_DEBUG] Deleting invoice:', invoiceId);
+  return api.delete(`/invoice/${invoiceId}`);
 };
 
 // Export the api instance for debugging

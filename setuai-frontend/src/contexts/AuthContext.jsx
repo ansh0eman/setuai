@@ -81,11 +81,28 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     console.log("Logging out...");
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    api.setAuthToken(null);
+    
+    // Add fade-out effect to the entire app
+    const appElement = document.getElementById('root');
+    if (appElement) {
+      appElement.style.transition = 'opacity 0.3s ease-out';
+      appElement.style.opacity = '0';
+    }
+    
+    // Add a small delay for smooth transition
+    setTimeout(() => {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      api.setAuthToken(null);
+      
+      // Reset opacity after logout
+      if (appElement) {
+        appElement.style.opacity = '1';
+        appElement.style.transition = '';
+      }
+    }, 300); // 300ms delay for smooth animation
   };
 
   const value = {

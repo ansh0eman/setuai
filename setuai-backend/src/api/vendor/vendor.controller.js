@@ -253,3 +253,219 @@ export const getVendorReport = async (req, res) => {
     });
   }
 };
+
+// Get buyer requests for a vendor
+export const getBuyerRequests = async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    
+    const buyerRequests = await prisma.buyerEngagement.findMany({
+      where: { vendorId },
+      include: {
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        engagementHistory: {
+          orderBy: { createdAt: 'desc' },
+          take: 3 // Get last 3 history entries
+        }
+      },
+      orderBy: [
+        { priority: 'desc' }, // URGENT first, then HIGH, MEDIUM, LOW
+        { createdAt: 'desc' }
+      ]
+    });
+
+    // Group by priority
+    const groupedRequests = {
+      URGENT: buyerRequests.filter(req => req.priority === 'URGENT'),
+      HIGH: buyerRequests.filter(req => req.priority === 'HIGH'),
+      MEDIUM: buyerRequests.filter(req => req.priority === 'MEDIUM'),
+      LOW: buyerRequests.filter(req => req.priority === 'LOW')
+    };
+
+    res.json({
+      success: true,
+      data: { 
+        buyerRequests,
+        groupedRequests,
+        summary: {
+          total: buyerRequests.length,
+          urgent: groupedRequests.URGENT.length,
+          high: groupedRequests.HIGH.length,
+          medium: groupedRequests.MEDIUM.length,
+          low: groupedRequests.LOW.length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching buyer requests:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch buyer requests'
+    });
+  }
+};
+
+// Get vendor engagements
+export const getVendorEngagements = async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+
+    console.log('🔵 [VENDOR_DEBUG] Fetching engagements for vendor:', vendorId);
+
+    const engagements = await prisma.buyerEngagement.findMany({
+      where: { vendorId },
+      include: {
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    console.log('🔵 [VENDOR_DEBUG] Found engagements:', engagements.length);
+
+    res.json({
+      success: true,
+      data: { engagements }
+    });
+  } catch (error) {
+    console.error('🔴 [VENDOR_DEBUG] Error fetching vendor engagements:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch vendor engagements'
+    });
+  }
+};
+
+// Get vendor engagement details
+export const getVendorEngagementDetails = async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    const { engagementId } = req.params;
+
+    console.log('🔵 [VENDOR_DEBUG] Fetching engagement details:', engagementId);
+
+    const engagement = await prisma.buyerEngagement.findFirst({
+      where: { id: engagementId, vendorId },
+      include: {
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        engagementHistory: {
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
+
+    if (!engagement) {
+      return res.status(404).json({
+        success: false,
+        error: 'Engagement not found'
+      });
+    }
+
+    console.log('🔵 [VENDOR_DEBUG] Engagement details found');
+
+    res.json({
+      success: true,
+      data: { engagement }
+    });
+  } catch (error) {
+    console.error('🔴 [VENDOR_DEBUG] Error fetching engagement details:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch engagement details'
+    });
+  }
+};
+
+// Update engagement status (vendor responding to buyer)
+export const updateEngagementResponse = async (req, res) => {
+  try {
+    const vendorId = req.user.vendorId;
+    const { engagementId } = req.params;
+    const { response, notes, nextAction, engagementStatus } = req.body;
+
+    console.log('🔵 [VENDOR_DEBUG] Updating engagement response:', engagementId);
+    console.log('🔵 [VENDOR_DEBUG] New status:', engagementStatus);
+    console.log('🔵 [VENDOR_DEBUG] Response data:', { response, notes, nextAction });
+
+    // Verify the engagement belongs to this vendor
+    const engagement = await prisma.buyerEngagement.findFirst({
+      where: { id: engagementId, vendorId }
+    });
+
+    if (!engagement) {
+      return res.status(404).json({
+        success: false,
+        error: 'Engagement not found'
+      });
+    }
+
+    // Prepare update data
+    const updateData = {
+      notes: notes || engagement.notes,
+      lastContact: new Date(),
+      nextFollowUp: nextAction ? new Date(nextAction) : engagement.nextFollowUp
+    };
+
+    // Update status if provided
+    if (engagementStatus && engagementStatus !== engagement.engagementStatus) {
+      updateData.engagementStatus = engagementStatus;
+      console.log('🔵 [VENDOR_DEBUG] Status change:', engagement.engagementStatus, '→', engagementStatus);
+    }
+
+    // Update engagement
+    const updatedEngagement = await prisma.buyerEngagement.update({
+      where: { id: engagementId },
+      data: updateData,
+      include: {
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    // Create history entry
+    await prisma.engagementHistory.create({
+      data: {
+        engagementId,
+        action: 'VENDOR_RESPONSE',
+        details: `Vendor responded: ${response}`,
+        previousStatus: engagement.engagementStatus,
+        newStatus: updatedEngagement.engagementStatus
+      }
+    });
+
+    console.log('🔵 [VENDOR_DEBUG] Engagement updated successfully');
+
+    res.json({
+      success: true,
+      data: { engagement: updatedEngagement }
+    });
+  } catch (error) {
+    console.error('🔴 [VENDOR_DEBUG] Error updating engagement response:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update engagement response'
+    });
+  }
+};

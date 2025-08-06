@@ -1,31 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import * as api from "../api";
 import Layout from '../components/Layout.jsx';
 import DocumentCard from '../components/DocumentCard.jsx';
 import Modal from '../components/Modal.jsx';
 import Toast from '../components/Toast.jsx';
 import DocumentList from '../components/DocumentList.jsx';
+import { triggerRoleBasedNotification, actionTriggers } from '../services/notificationService';
 
 // Helper to get status color
 const getStatusBadgeClass = (action) => {
   switch (action?.toUpperCase()) {
     case 'VERIFIED':
-      return 'bg-emerald-50 text-emerald-700 ring-emerald-600/20';
+      return 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 ring-emerald-600/20';
     case 'REJECTED':
-      return 'bg-red-50 text-red-700 ring-red-600/20';
+      return 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 ring-red-600/20';
     case 'PENDING':
-      return 'bg-yellow-50 text-yellow-700 ring-yellow-600/20';
+      return 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 ring-yellow-600/20';
     default:
-      return 'bg-gray-50 text-gray-600 ring-gray-500/10';
+      return 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 ring-gray-500/10';
   }
 };
 
+// Helper function to trigger global notification refresh
+const triggerNotificationRefresh = () => {
+  if (window.notificationRefreshTrigger) {
+    window.notificationRefreshTrigger();
+  }
+};
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { isAuthenticated, token } = useAuth();
+  const { t } = useLocalization();
   const [profile, setProfile] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [uploadingId, setUploadingId] = useState(null);
@@ -89,8 +98,8 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error("Error fetching data:", err);
-      setError(err.response?.data?.error || `Failed to load data: ${err.message}`);
-      showToast('error', 'Failed to load data. Please try again.');
+      setError(err.response?.data?.error || `${t('errors.networkError')}: ${err.message}`);
+      showToast('error', t('dashboard.uploadError'));
     } finally {
       setLoading(false);
     }
@@ -118,7 +127,46 @@ export default function DashboardPage() {
         const documentsRes = await api.getVendorDocuments();
         const docs = documentsRes.data.documents || [];
         const processedDocs = processDocuments(docs);
+        
+        // Check for status changes and trigger notifications
+        const previousDocs = documents;
+        const statusChanges = [];
+        
+        processedDocs.forEach(newDoc => {
+          const prevDoc = previousDocs.find(d => d.id === newDoc.id);
+          if (prevDoc) {
+            const newStatus = newDoc.uploadedDocuments?.[0]?.verificationStatus;
+            const prevStatus = prevDoc.uploadedDocuments?.[0]?.verificationStatus;
+            
+            if (newStatus !== prevStatus) {
+              statusChanges.push({
+                doc: newDoc,
+                previousStatus: prevStatus,
+                newStatus: newStatus
+              });
+            }
+          }
+        });
+        
+        // Trigger notifications for status changes (vendor-specific)
+        statusChanges.forEach(change => {
+          if (change.newStatus === 'VERIFIED') {
+            triggerRoleBasedNotification(actionTriggers.DOCUMENT_VERIFIED, {
+              documentName: change.doc.name
+            }, 'VENDOR_ADMIN');
+          } else if (change.newStatus === 'REJECTED') {
+            triggerRoleBasedNotification(actionTriggers.DOCUMENT_REJECTED, {
+              documentName: change.doc.name
+            }, 'VENDOR_ADMIN');
+          }
+        });
+        
         setDocuments(processedDocs);
+        
+        // Trigger global notification refresh if there were status changes
+        if (statusChanges.length > 0) {
+          triggerNotificationRefresh();
+        }
         
         // Check if any documents are still pending
         const hasPendingDocs = processedDocs.some(doc => 
@@ -138,10 +186,10 @@ export default function DashboardPage() {
         setIsPolling(false);
         clearInterval(pollInterval);
       }
-    }, 2000); // Poll every 2 seconds
+    }, 5000); // Poll every 5 seconds (reduced frequency)
 
     return () => clearInterval(pollInterval);
-  }, [isPolling]);
+  }, [isPolling, documents]);
 
   const processDocuments = (docs) => {
     return (docs || []).map(doc => {
@@ -179,6 +227,18 @@ export default function DashboardPage() {
 
       await api.uploadDocument(formData);
       
+      // Find the document name for notification
+      const document = documents.find(doc => doc.id === complianceDocumentId);
+      const documentName = document?.name || 'Document';
+      
+      // Trigger upload notification (vendor-specific)
+      triggerRoleBasedNotification(actionTriggers.DOCUMENT_UPLOADED, {
+        documentName: documentName
+      }, 'VENDOR_ADMIN');
+      
+      // Trigger global notification refresh
+      triggerNotificationRefresh();
+      
       // Refresh documents list
       const documentsRes = await api.getVendorDocuments();
       const processedDocs = processDocuments(documentsRes.data.documents);
@@ -188,13 +248,13 @@ export default function DashboardPage() {
         ...s,
         [complianceDocumentId]: "Upload successful!"
       }));
-      showToast('success', 'Document uploaded successfully');
+      showToast('success', t('dashboard.uploadSuccess'));
       
       // Start polling for status updates
       setIsPolling(true);
     } catch (err) {
       console.error("Upload error:", err);
-      const errorMessage = err?.response?.data?.error || "Upload failed";
+      const errorMessage = err?.response?.data?.error || t('dashboard.uploadError');
       setUploadStatus((s) => ({
         ...s,
         [complianceDocumentId]: errorMessage
@@ -255,7 +315,7 @@ export default function DashboardPage() {
           title={`Audit Logs for ${modalDocName}`}
         >
           {!modalLogs || modalLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -267,17 +327,17 @@ export default function DashboardPage() {
                 const displayName = safeDisplay(log.changedByUser?.name || log.changedByUserId);
                 console.log('Audit log displayName:', displayName, log.changedByUser, log.changedByUserId);
                 return (
-                  <li key={idx} className="bg-gray-50 rounded-lg p-4 transition-all hover:bg-gray-100">
+                  <li key={idx} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 transition-all hover:bg-gray-100 dark:hover:bg-gray-600">
                     <div className="flex items-center justify-between">
                       <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${getStatusBadgeClass(log.action)}`}>
                         {log.action}
                       </span>
-                      <time className="text-xs text-gray-500">
+                      <time className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(log.timestamp).toLocaleString()}
                       </time>
                     </div>
-                    <p className="mt-2 text-sm text-gray-700">{log.details}</p>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                    <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{log.details}</p>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <img
                         className="h-4 w-4 rounded-full"
                         src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=6366f1&color=fff`}
@@ -294,18 +354,18 @@ export default function DashboardPage() {
       <div className="space-y-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-text-primary">Compliance Documents</h1>
-            <p className="mt-1 text-sm sm:text-base text-text-secondary">
-              Upload and manage your compliance documents
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{t('dashboard.title')}</h1>
+            <p className="mt-1 text-sm sm:text-base text-gray-600 dark:text-gray-300">
+              {t('dashboard.overview')}
             </p>
           </div>
-          <div className="text-text-tertiary text-xs sm:text-sm">
-            Last updated: {new Date().toLocaleDateString()}
+          <div className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
+            {t('common.lastUpdated')}: {new Date().toLocaleDateString()}
           </div>
         </div>
 
         {error && (
-          <div className="p-4 bg-status-error-bg border border-status-error-border rounded-lg text-status-error-text">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M10 6.66669V10" stroke="currentColor" strokeWidth="1.67" strokeLinecap="round"/>
@@ -325,7 +385,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="loading-spinner w-8 h-8 mx-auto mb-4" />
-              <p className="text-gray-500">Loading authentication...</p>
+              <p className="text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
             </div>
           </div>
         ) : (

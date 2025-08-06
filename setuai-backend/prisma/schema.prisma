@@ -17,6 +17,8 @@ model User {
   vendor        Vendor   @relation(fields: [vendorId], references: [id])
   createdAt     DateTime @default(now())
   auditLogs     AuditLog[]
+  buyerEngagements BuyerEngagement[] @relation("BuyerEngagements")
+  invoiceRatings InvoiceRating[]
 }
 
 model Vendor {
@@ -24,8 +26,12 @@ model Vendor {
   companyName       String
   factoryLocation   String // e.g., "Tamil Nadu"
   complianceStatus  ComplianceStatus   @default(RED)
+  isPublished       Boolean            @default(false)
   users             User[]
   uploadedDocuments UploadedDocument[]
+  marketplaceProfile MarketplaceProfile?
+  buyerEngagements  BuyerEngagement[]  @relation("VendorEngagements")
+  invoiceImages     InvoiceImage[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   overallComplianceScore Float?
@@ -82,6 +88,130 @@ model AuditLog {
   apiResponse    Json?              // Store API verification responses
 }
 
+model MarketplaceProfile {
+  id                  String    @id @default(cuid())
+  companyDescription  String?   @db.Text
+  contactEmail        String?
+  websiteUrl          String?
+  logoUrl             String?
+  vendorId            String    @unique
+  vendor              Vendor    @relation(fields: [vendorId], references: [id])
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model BuyerEngagement {
+  id                String              @id @default(cuid())
+  buyerId           String
+  buyer             User                @relation("BuyerEngagements", fields: [buyerId], references: [id])
+  vendorId          String
+  vendor            Vendor              @relation("VendorEngagements", fields: [vendorId], references: [id])
+  engagementStatus  EngagementStatus    @default(PENDING)
+  priority          PriorityLevel       @default(MEDIUM)
+  notes             String?             @db.Text
+  lastContact       DateTime?
+  nextFollowUp      DateTime?
+  dealValue         Float?
+  dealCurrency      String?             @default("INR")
+  dealType          DealType?           // e.g., "PURCHASE", "SERVICE", "CONSULTATION"
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  engagementHistory EngagementHistory[]
+  invoiceImages     InvoiceImage[]
+  invoices          Invoice[]
+}
+
+model EngagementHistory {
+  id                String    @id @default(cuid())
+  engagementId      String
+  engagement        BuyerEngagement @relation(fields: [engagementId], references: [id], onDelete: Cascade)
+  action            String    // e.g., "STATUS_CHANGE", "NOTE_ADDED", "CONTACT_MADE"
+  details           String?   @db.Text
+  previousStatus    EngagementStatus?
+  newStatus         EngagementStatus?
+  previousPriority  PriorityLevel?
+  newPriority       PriorityLevel?
+  createdAt         DateTime  @default(now())
+}
+
+model InvoiceImage {
+  id            String    @id @default(cuid())
+  filename      String
+  filePath      String
+  mimeType      String
+  vendorId      String
+  vendor        Vendor    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  engagementId  String
+  engagement    BuyerEngagement @relation(fields: [engagementId], references: [id], onDelete: Cascade)
+  uploadedAt    DateTime  @default(now())
+  invoice       Invoice?
+}
+
+model Invoice {
+  id                String        @id @default(cuid())
+  invoiceNumber     String
+  invoiceDate       DateTime
+  dueDate           DateTime?
+  vendorName        String
+  vendorAddress     String?       @db.Text
+  vendorGstin       String?
+  vendorPhone       String?
+  vendorEmail       String?
+  buyerName         String
+  buyerAddress      String?       @db.Text
+  buyerGstin        String?
+  buyerPhone        String?
+  buyerEmail        String?
+  currency          String        @default("INR")
+  subtotal          Float
+  taxAmount         Float
+  totalAmount       Float
+  paymentTerms      String?
+  paymentMethod     String?
+  notes             String?       @db.Text
+  confidence        Float         // AI extraction confidence (0-1)
+  extractionQuality String        // HIGH, MEDIUM, LOW
+  missingFields     String[]      // Array of missing field names
+  warnings          String[]      // Array of warning messages
+  verificationStatus VerificationStatus @default(PENDING) // Invoice verification status
+  invoiceImageId    String        @unique
+  invoiceImage      InvoiceImage  @relation(fields: [invoiceImageId], references: [id], onDelete: Cascade)
+  engagementId      String
+  engagement        BuyerEngagement @relation(fields: [engagementId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  items             InvoiceItem[]
+  ratings           InvoiceRating[]
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float
+  unit        String?
+  unitPrice   Float
+  totalPrice  Float
+  taxRate     Float?
+  taxAmount   Float?
+  createdAt   DateTime @default(now())
+}
+
+model InvoiceRating {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  raterId     String
+  rater       User     @relation(fields: [raterId], references: [id], onDelete: Cascade)
+  rating      Int      // 1-5 stars
+  review      String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([invoiceId, raterId]) // One rating per user per invoice
+}
+
 enum UserRole { 
   VENDOR_ADMIN
   BUYER_ADMIN
@@ -110,4 +240,27 @@ enum CompliancePillar {
   ESI_PF_COVERAGE
   CHILD_LABOR_AGE_VERIFICATION
   ENVIRONMENTAL
+}
+
+enum EngagementStatus {
+  ACTIVE
+  PENDING
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+enum PriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum DealType {
+  PURCHASE
+  SERVICE
+  CONSULTATION
+  PARTNERSHIP
+  LICENSING
 }
