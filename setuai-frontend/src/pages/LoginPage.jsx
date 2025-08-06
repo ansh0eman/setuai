@@ -173,6 +173,11 @@ export default function LoginPage() {
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:bg-white/20 hover:bg-white/15 transition-all duration-300 relative z-10"
                   placeholder="Enter your email"
                   required
+                  style={{
+                    WebkitTextFillColor: 'white',
+                    WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.1) inset',
+                    caretColor: 'white'
+                  }}
                 />
               </motion.div>
             </div>
@@ -194,9 +199,14 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField(null)}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:bg-white/20 hover:bg-white/15 transition-all duration-300 relative z-10"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:bg-white/20 hover:bg-white/15 transition-all duration-300 relative z-10 [&::-webkit-credentials-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:hover:bg-white/15 [&::-webkit-credentials-auto-fill-button]:focus:bg-white/20"
                   placeholder="Enter your password"
                   required
+                  style={{
+                    WebkitTextFillColor: 'white',
+                    WebkitBoxShadow: '0 0 0 1000px rgba(255, 255, 255, 0.1) inset',
+                    caretColor: 'white'
+                  }}
                 />
               </motion.div>
             </div>

@@ -31,8 +31,39 @@ input[type="password"] {
   display: block !important;
   position: relative !important;
   z-index: auto !important;
-  background-color: white !important;
-  color: black !important;
+}
+
+/* Override browser autofill styles for password fields */
+input[type="password"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill:hover,
+input[type="password"]:-webkit-autofill:focus,
+input[type="password"]:-webkit-autofill:active {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Ensure password field icons are properly styled */
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  background-color: transparent !important;
+  border: none !important;
+  color: white !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Override browser autofill styles for email fields */
+input[type="email"]:-webkit-autofill,
+input[type="email"]:-webkit-autofill:hover,
+input[type="email"]:-webkit-autofill:focus,
+input[type="email"]:-webkit-autofill:active {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Ensure form elements are not blocked */
