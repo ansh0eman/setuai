@@ -291,6 +291,12 @@ We welcome contributions! Please follow these steps:
 
 ---
 
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
 ## 🆘 Support
 
 <div align="center">
