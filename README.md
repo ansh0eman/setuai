@@ -11,10 +11,9 @@
 **Intelligent compliance management powered by AI**  
 *Making regulatory compliance effortless and accurate*
 
-[![GitHub stars](https://img.shields.io/github/stars/hemang-doshi/setuai?style=social)](https://github.com/hemang-doshi/setuai)
-[![GitHub forks](https://img.shields.io/github/forks/hemang-doshi/setuai?style=social)](https://github.com/hemang-doshi/setuai)
-[![GitHub issues](https://img.shields.io/github/issues/hemang-doshi/setuai)](https://github.com/hemang-doshi/setuai/issues)
-[![GitHub license](https://img.shields.io/github/license/hemang-doshi/setuai)](https://github.com/hemang-doshi/setuai/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/ansh0eman/setuai?style=social)](https://github.com/ansh0eman/setuai)
+[![GitHub forks](https://img.shields.io/github/forks/ansh0eman/setuai?style=social)](https://github.com/ansh0eman/setuai)
+[![GitHub issues](https://img.shields.io/github/issues/ansh0eman/setuai)](https://github.com/ansh0eman/setuai/issues)
 
 </div>
 
@@ -95,7 +94,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/hemang-doshi/setuai.git
+git clone https://github.com/ansh0eman/setuai.git
 cd setuai
 
 # Install backend dependencies
@@ -303,12 +302,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 <div align="center">
 
 ### Need Help?
-[![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github)](https://github.com/hemang-doshi/setuai/issues)
-[![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-blue?style=for-the-badge&logo=github)](https://github.com/hemang-doshi/setuai/discussions)
+[![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github)](https://github.com/ansh0eman/setuai/issues)
+[![GitHub Discussions](https://img.shields.io/badge/GitHub-Discussions-blue?style=for-the-badge&logo=github)](https://github.com/ansh0eman/setuai/discussions)
 
-### Connect With Us
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/hemang-doshi)
-[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:hemangdoshi@gmail.com)
 
 </div>
 
@@ -316,10 +312,10 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 <div align="center">
 
-**Made with ❤️ by [Hemang Doshi](https://github.com/hemang-doshi)**
+**Developed and maintained by [Anshuman](https://github.com/ansh0eman)**
 
 ![GitHub followers](https://img.shields.io/github/followers/hemang-doshi?label=Follow&style=social)
-![GitHub stars](https://img.shields.io/github/stars/hemang-doshi/setuai?style=social)
+![GitHub stars](https://img.shields.io/github/stars/ansh0eman/setuai?style=social)
 
 *SetuAI - Making compliance management smarter with AI* 🚀
 
