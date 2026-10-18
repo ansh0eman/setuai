@@ -291,12 +291,6 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📄 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 🆘 Support
 
 <div align="center">
@@ -314,7 +308,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Developed and maintained by [Anshuman](https://github.com/ansh0eman)**
 
-![GitHub followers](https://img.shields.io/github/followers/hemang-doshi?label=Follow&style=social)
+![GitHub followers](https://img.shields.io/github/followers/ansh0eman?label=Follow&style=social)
 ![GitHub stars](https://img.shields.io/github/stars/ansh0eman/setuai?style=social)
 
 *SetuAI - Making compliance management smarter with AI* 🚀
